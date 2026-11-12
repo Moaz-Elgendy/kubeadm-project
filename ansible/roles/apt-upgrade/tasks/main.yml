@@ -1,0 +1,27 @@
+---
+- name: Upgrade packages
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+    upgrade: "{{ apt_upgrade_mode }}"
+    autoremove: true
+
+- name: Check whether a reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: apt_reboot_required
+
+- name: Reboot when required and allowed
+  ansible.builtin.reboot:
+    reboot_timeout: "{{ apt_upgrade_reboot_timeout }}"
+  when:
+    - apt_reboot_required.stat.exists
+    - apt_upgrade_reboot | bool
+    - ansible_connection != 'local'
+
+- name: Warn that a manual reboot is needed
+  ansible.builtin.debug:
+    msg: "{{ inventory_hostname }} needs a reboot, not performed automatically."
+  when:
+    - apt_reboot_required.stat.exists
+    - not (apt_upgrade_reboot | bool) or ansible_connection == 'local'

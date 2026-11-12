@@ -1,0 +1,12 @@
+---
+- name: Restart docker
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+
+# A running service only picks up a new group membership after a restart.
+- name: Restart services of docker group members
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: restarted
+  loop: "{{ docker_restart_services }}"

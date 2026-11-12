@@ -1,0 +1,36 @@
+# kube-prometheus-stack values: let every component schedule on both nodes
+# (the worker carries a NoSchedule taint, the control plane its default one).
+#
+# helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+# helm upgrade --install monitoring prometheus-community/kube-prometheus-stack --version 92.17.0 -n monitoring --create-namespace -f k8s/monitoring/values.yaml
+prometheus:
+  prometheusSpec:
+    tolerations:
+      - operator: Exists
+        effect: NoSchedule
+
+alertmanager:
+  alertmanagerSpec:
+    tolerations:
+      - operator: Exists
+        effect: NoSchedule
+
+grafana:
+  tolerations:
+    - operator: Exists
+      effect: NoSchedule
+
+prometheusOperator:
+  tolerations:
+    - operator: Exists
+      effect: NoSchedule
+
+kube-state-metrics:
+  tolerations:
+    - operator: Exists
+      effect: NoSchedule
+
+prometheus-node-exporter:
+  tolerations:
+    - operator: Exists
+      effect: NoSchedule

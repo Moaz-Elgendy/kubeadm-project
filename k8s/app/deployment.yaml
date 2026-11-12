@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopapp
+  namespace: shopapp
+  labels:
+    app.kubernetes.io/name: shopapp
+    app: shopapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: shopapp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: shopapp
+        app: shopapp
+    spec:
+      nodeSelector:
+        project: shopapp
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: shopapp
+          effect: NoSchedule
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.37
+          envFrom:
+            - configMapRef:
+                name: shopapp-config
+          command:
+            - sh
+            - -c
+            - until nc -z "$DB_HOST" 3306; do echo "waiting for $DB_HOST:3306"; sleep 3; done
+      containers:
+        - name: shopapp
+          image: mk0230/shopapp:1
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: shopapp-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopapp-db-secret
+                  key: DB_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 200m
+              memory: 500Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false

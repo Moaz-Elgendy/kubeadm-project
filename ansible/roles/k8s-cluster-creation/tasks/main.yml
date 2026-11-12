@@ -1,0 +1,55 @@
+---
+- name: Check whether the cluster is already initialised
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: k8s_admin_conf
+
+- name: Run kubeadm init
+  ansible.builtin.command: >-
+    kubeadm init
+    --apiserver-advertise-address={{ k8s_apiserver_advertise_address }}
+    --pod-network-cidr={{ k8s_pod_cidr }}
+    --cri-socket={{ k8s_cri_socket }}
+  when: not k8s_admin_conf.stat.exists
+  changed_when: true
+
+- name: Create kubeconfig directory for the admin user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy admin kubeconfig to the admin user
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+
+- name: Install Flannel
+  ansible.builtin.command: "kubectl apply -f {{ flannel_manifest_url }}"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: flannel_apply
+  changed_when: "'created' in flannel_apply.stdout or 'configured' in flannel_apply.stdout"
+
+- name: Wait for the control plane node to be Ready
+  ansible.builtin.command: kubectl wait --for=condition=Ready node --all --timeout=300s
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  changed_when: false
+
+- name: Generate the worker join command
+  ansible.builtin.command: kubeadm token create --print-join-command
+  register: k8s_join_cmd
+  changed_when: true
+  no_log: true
+
+- name: Store the join command as a fact
+  ansible.builtin.set_fact:
+    kubeadm_join_command: "{{ k8s_join_cmd.stdout }}"
+  no_log: true

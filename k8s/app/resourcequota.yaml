@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: shopapp-quota
+  namespace: shopapp
+  labels:
+    app.kubernetes.io/name: shopapp
+spec:
+  hard:
+    # 2 app + 1 db steady state, +1 for a rolling-update surge pod
+    pods: "4"

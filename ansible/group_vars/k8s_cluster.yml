@@ -1,0 +1,2 @@
+---
+k8s_apiserver_advertise_address: "{{ hostvars[groups['control_plane'][0]].ansible_host }}"

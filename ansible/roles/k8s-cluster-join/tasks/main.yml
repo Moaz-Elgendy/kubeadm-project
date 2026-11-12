@@ -1,0 +1,19 @@
+---
+- name: Check whether the node already joined
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: k8s_kubelet_conf
+
+- name: Join the cluster
+  ansible.builtin.command: >-
+    {{ hostvars[groups['control_plane'][0]].kubeadm_join_command }}
+    --cri-socket={{ k8s_cri_socket }}
+  when: not k8s_kubelet_conf.stat.exists
+  changed_when: true
+  no_log: true
+
+- name: Create the MySQL local volume directory
+  ansible.builtin.file:
+    path: "{{ mysql_pv_dir }}"
+    state: directory
+    mode: "0755"

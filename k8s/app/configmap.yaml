@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopapp-config
+  namespace: shopapp
+  labels:
+    app.kubernetes.io/name: shopapp
+data:
+  DB_HOST: shopapp-db
+  DB_USER: shopapp
+  DB_NAME: shopapp

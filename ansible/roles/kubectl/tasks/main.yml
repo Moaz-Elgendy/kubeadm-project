@@ -1,0 +1,21 @@
+---
+- name: Install kubectl binary with checksum verification
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ kubectl_arch }}/kubectl"
+    checksum: "sha256:https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ kubectl_arch }}/kubectl.sha256"
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
+- name: Install bash-completion
+  ansible.builtin.apt:
+    name: bash-completion
+    cache_valid_time: 3600
+
+- name: Enable kubectl completion for the user
+  ansible.builtin.lineinfile:
+    path: "/home/{{ kubectl_user }}/.bashrc"
+    line: "source <(kubectl completion bash)"
+    create: true
+    owner: "{{ kubectl_user }}"
+    group: "{{ kubectl_user }}"
+    mode: "0644"

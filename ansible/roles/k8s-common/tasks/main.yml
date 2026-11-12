@@ -1,0 +1,130 @@
+---
+- name: Load kernel modules at boot
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      overlay
+      br_netfilter
+      vxlan
+    mode: "0644"
+
+- name: Load kernel modules now
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: [overlay, br_netfilter, vxlan]
+
+- name: Set kubernetes sysctls
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-k8s.conf
+    reload: true
+  loop:
+    - net.ipv4.ip_forward
+    - net.bridge.bridge-nf-call-iptables
+
+- name: Turn swap off now
+  ansible.builtin.command: swapoff -a
+  when: ansible_swaptotal_mb | int > 0
+  changed_when: true
+
+- name: Remove swap from fstab
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^([^#\n].*\sswap\s.*)$'
+    replace: '# \1'
+
+- name: Install container runtime and CNI plugins
+  ansible.builtin.apt:
+    name: [containerd, runc, containernetworking-plugins, apt-transport-https, ca-certificates, curl, gpg]
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create CNI binary directory
+  ansible.builtin.file:
+    path: /opt/cni/bin
+    state: directory
+    mode: "0755"
+
+- name: Link CNI plugins from the Debian package path
+  ansible.builtin.file:
+    src: "/usr/lib/cni/{{ item }}"
+    dest: "/opt/cni/bin/{{ item }}"
+    state: link
+  loop: "{{ k8s_cni_plugins }}"
+
+- name: Create containerd config directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: "0755"
+
+- name: Check for a full containerd config (with the runc options table)
+  ansible.builtin.command: grep -q 'runtimes.runc.options' /etc/containerd/config.toml
+  register: containerd_full_config
+  changed_when: false
+  failed_when: false
+
+# A missing or minimal (distro-shipped) config is replaced by the full default.
+- name: Generate default containerd config
+  ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
+  when: containerd_full_config.rc != 0
+  changed_when: true
+  notify: Restart containerd
+
+# Sets SystemdCgroup = true whether the line exists (any value) or not;
+# insertafter matches the runc options table in both containerd 1.x and 2.x.
+- name: Use the systemd cgroup driver
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/config.toml
+    regexp: '^\s*SystemdCgroup\s*='
+    line: '            SystemdCgroup = true'
+    insertafter: 'runtimes\.runc\.options\]\s*$'
+  notify: Restart containerd
+
+- name: Verify SystemdCgroup is true
+  ansible.builtin.command: grep -Eq '^\s*SystemdCgroup\s*=\s*true' /etc/containerd/config.toml
+  changed_when: false
+
+- name: Apply containerd changes before kubeadm runs
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable containerd
+  ansible.builtin.service:
+    name: containerd
+    state: started
+    enabled: true
+
+- name: Create the apt keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add the Kubernetes apt signing key
+  ansible.builtin.get_url:
+    url: "https://pkgs.k8s.io/core:/stable:/{{ k8s_minor_version }}/deb/Release.key"
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    mode: "0644"
+
+- name: Add the Kubernetes apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/{{ k8s_minor_version }}/deb/ /"
+    filename: kubernetes
+    update_cache: true
+
+- name: Install kubelet and kubeadm
+  ansible.builtin.apt:
+    name: [kubelet, kubeadm]
+
+- name: Hold kubelet and kubeadm
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: [kubelet, kubeadm]
+
+- name: Enable kubelet
+  ansible.builtin.service:
+    name: kubelet
+    enabled: true

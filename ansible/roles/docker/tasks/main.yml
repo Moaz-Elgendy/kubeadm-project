@@ -1,0 +1,20 @@
+---
+- name: Install Docker from the Debian repository
+  ansible.builtin.apt:
+    name: docker.io
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Enable and start Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add users to the docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+  notify: Restart services of docker group members

@@ -1,0 +1,2 @@
+---
+k8s_cni_plugins: [bridge, host-local, loopback, portmap]

@@ -1,0 +1,4 @@
+---
+apt_upgrade_mode: dist       # dist | safe
+apt_upgrade_reboot: true     # never reboots a local connection, only warns
+apt_upgrade_reboot_timeout: 600

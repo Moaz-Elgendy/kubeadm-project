@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850" width="1200" height="850" role="img" aria-labelledby="at ad" font-family="var(--body,'IBM Plex Sans','Segoe UI',Arial,sans-serif)">
+<title id="at">shopapp platform architecture</title>
+<desc id="ad">Main PC pushes to GitHub. A webhook triggers Jenkins on the server, which builds, scans with Trivy and pushes the image to Docker Hub, then commits the new tag to GitHub. Argo CD in the k8s-cp VM watches GitHub and rolls out to the shopapp namespace on the k8s-worker VM, whose pods pull the image from Docker Hub. Prometheus scrapes node-exporter on both nodes and feeds Grafana. Ansible provisions both VMs and the server.</desc>
+<style>
+.bg{fill:var(--s-bg,#F7F8FA)}.box{fill:var(--s-card,#fff);stroke:var(--s-line,#8C97A4);stroke-width:1.5}
+.srv{fill:var(--s-srv,#EDF0F4);stroke:var(--s-ink,#12161C);stroke-width:2}.kvm{fill:none;stroke:var(--s-line,#8C97A4);stroke-width:1.5;stroke-dasharray:7 5}
+.ci{fill:var(--s-cit,#E4E9FC);stroke:var(--s-ci,#2A4BE0);stroke-width:1.5}.cd{fill:var(--s-cdt,#DDF1E6);stroke:var(--s-cd,#0F7B4A);stroke-width:1.5}
+.mo{fill:var(--s-mot,#FBEBD3);stroke:var(--s-mo,#B45309);stroke-width:1.5}.pr{fill:var(--s-prt,#EDE3F9);stroke:var(--s-pr,#7B3FC4);stroke-width:1.5}
+.dash{stroke-dasharray:6 4}
+text{fill:var(--s-ink,#12161C);font-size:13px}.b{font-weight:600;font-size:15px}.h{font-size:18px;font-weight:700}.s{fill:var(--s-mute,#475260);font-size:12.5px}.m{font-family:var(--mono,'IBM Plex Mono',monospace);font-size:12px}
+.halo{paint-order:stroke;stroke:var(--s-bg,#F7F8FA);stroke-width:5px;stroke-linejoin:round}.on{fill:var(--s-on,#fff);font-weight:700;font-size:12px}
+.l{fill:none;stroke-width:2.5}.lci{stroke:var(--s-ci,#2A4BE0)}.lcd{stroke:var(--s-cd,#0F7B4A)}.lmo{stroke:var(--s-mo,#B45309)}.lpr{stroke:var(--s-pr,#7B3FC4)}.lg{stroke:var(--s-mute,#475260)}
+.fci{fill:var(--s-ci,#2A4BE0)}.fcd{fill:var(--s-cd,#0F7B4A)}.fmo{fill:var(--s-mo,#B45309)}.fpr{fill:var(--s-pr,#7B3FC4)}.fg{fill:var(--s-mute,#475260)}
+</style>
+<defs>
+<marker id="a-ci" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" class="fci"/></marker>
+<marker id="a-cd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" class="fcd"/></marker>
+<marker id="a-mo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" class="fmo"/></marker>
+<marker id="a-pr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" class="fpr"/></marker>
+<marker id="a-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="fg"/></marker>
+</defs>
+<rect class="bg" width="1200" height="850"/>
+<!-- external -->
+<rect class="box" x="40" y="20" width="290" height="64" rx="12"/><text class="h" x="58" y="48">GitHub</text><text class="s" x="58" y="68">Moaz-Elgendy/kubeadm-project · main</text>
+<rect class="box" x="560" y="20" width="200" height="64" rx="12"/><text class="h" x="578" y="48">Main PC</text><text class="s" x="578" y="68">same LAN · SSH client</text>
+<rect class="box" x="980" y="20" width="190" height="64" rx="12"/><text class="h" x="998" y="48">Docker Hub</text><text class="s m" x="998" y="68">mk0230/shopapp:&lt;n&gt;</text>
+<!-- server -->
+<rect class="srv" x="20" y="140" width="1160" height="620" rx="18"/>
+<rect class="ci" x="40" y="205" width="250" height="265" rx="14"/>
+<rect class="box" x="56" y="225" width="218" height="62" rx="9"/><text class="b" x="70" y="250">Jenkins</text><text class="s" x="70" y="270">CI · built-in node · Jenkinsfile</text>
+<rect class="box" x="56" y="299" width="218" height="62" rx="9"/><text class="b" x="70" y="324">Docker</text><text class="s" x="70" y="344">builds the image</text>
+<rect class="box" x="56" y="373" width="218" height="62" rx="9"/><text class="b" x="70" y="398">Trivy</text><text class="s" x="70" y="418">scans HIGH, CRITICAL</text>
+<text class="s" x="56" y="458">CI toolchain · systemd services</text>
+<rect class="pr" x="40" y="505" width="250" height="70" rx="12"/><text class="b" x="56" y="533">Ansible</text><text class="s" x="56" y="554">control node · playbooks</text>
+<rect class="box" x="40" y="610" width="250" height="130" rx="12" style="stroke:var(--s-ink,#12161C)"/><text class="h" x="56" y="638">Server</text><text class="s" x="56" y="662">Debian 13 · 192.168.1.5</text><text class="s" x="56" y="682">Core i5-3230M · 2C / 4T</text><text class="s" x="56" y="702">8 GB RAM · 500 GB HDD</text><text class="s" x="56" y="722">only physical machine</text>
+<!-- libvirt -->
+<rect class="kvm" x="320" y="190" width="845" height="545" rx="16"/>
+<text class="b" x="336" y="214">libvirt / KVM</text><text class="s m" x="450" y="214">virbr0 · 192.168.122.0/24 (NAT)</text>
+<!-- cp -->
+<rect class="box" x="335" y="235" width="350" height="450" rx="14" style="stroke:var(--s-ink,#12161C)"/><text class="h" x="351" y="262">k8s-cp</text><text class="s m" x="425" y="262">192.168.122.69</text><text class="s" x="351" y="282">control plane · 2 vCPU · 3 GB</text>
+<rect class="box" x="351" y="298" width="318" height="62" rx="9"/><text class="b" x="365" y="322">Control plane</text><text class="s" x="365" y="342">apiserver · etcd · scheduler · controller-mgr</text>
+<rect class="cd" x="351" y="376" width="318" height="60" rx="9"/><text class="b" x="365" y="400">Argo CD v3.6.1</text><text class="s" x="365" y="420">auto-sync · self-heal · prune</text>
+<rect class="mo" x="351" y="452" width="318" height="126" rx="9"/><text class="b" x="365" y="475">Monitoring</text><text class="s" x="470" y="475">namespace monitoring</text>
+<rect class="box" x="363" y="488" width="148" height="28" rx="6"/><text x="373" y="507">Prometheus v3.15.1</text>
+<path class="l lmo" d="M511 502H530" marker-end="url(#a-mo)"/>
+<rect class="box" x="532" y="488" width="128" height="28" rx="6"/><text x="541" y="507">Grafana 13.3.0</text>
+<text class="s" x="365" y="548">+ Alertmanager · kube-state-metrics</text>
+<rect class="mo" x="351" y="602" width="318" height="64" rx="9"/><text class="b" x="365" y="626">node-exporter v1.12.1</text><text class="s m" x="365" y="648">DaemonSet · 192.168.122.69:9100</text>
+<path class="l lmo" d="M410 578V600" marker-end="url(#a-mo)"/><text class="s" x="420" y="594">scrape</text>
+<!-- worker -->
+<rect class="box" x="800" y="235" width="350" height="450" rx="14" style="stroke:var(--s-ink,#12161C)"/><text class="h" x="816" y="262">k8s-worker</text><text class="s m" x="948" y="262">192.168.122.242</text><text class="s" x="816" y="282">taint workload=shopapp:NoSchedule</text>
+<rect class="cd dash" x="816" y="298" width="318" height="282" rx="12"/><text class="b" x="832" y="320" style="fill:var(--s-cdx,#0B5A37)">namespace shopapp</text>
+<rect class="box" x="832" y="332" width="286" height="66" rx="9"/><text class="b" x="846" y="356">Deployment shopapp ×2</text><text class="s" x="846" y="378">Node.js 22 · probes · limits · non-root</text>
+<rect class="box" x="832" y="408" width="286" height="38" rx="9"/><text x="846" y="432">Service shopapp</text><text class="s m" x="1000" y="432">ClusterIP :3000</text>
+<rect class="box" x="832" y="456" width="286" height="66" rx="9"/><text class="b" x="846" y="480">StatefulSet shopapp-db</text><text class="s" x="846" y="502">MySQL 8.4 · 5Gi local PV on this node</text>
+<rect class="box" x="832" y="532" width="286" height="36" rx="9"/><text x="846" y="555">NetworkPolicy: app pods → :3306 only</text>
+<rect class="mo" x="816" y="602" width="318" height="64" rx="9"/><text class="b" x="830" y="626">node-exporter v1.12.1</text><text class="s m" x="830" y="648">DaemonSet · 192.168.122.242:9100</text>
+<!-- flannel -->
+<path class="l lg" d="M685 336H800" marker-start="url(#a-g)" marker-end="url(#a-g)"/><rect class="box" x="702" y="314" width="80" height="44" rx="10"/><text class="s" x="742" y="332" text-anchor="middle">Flannel</text><text class="s" x="742" y="348" text-anchor="middle">VXLAN</text>
+<!-- flows -->
+<path class="l lci" d="M560 52H332" marker-end="url(#a-ci)"/>
+<path class="l lg" d="M660 84V138" marker-end="url(#a-g)"/><text class="b halo" x="672" y="116">SSH</text>
+<path class="l lci" d="M100 84V223" marker-end="url(#a-ci)"/>
+<path class="l lci" d="M190 223V86" marker-end="url(#a-ci)"/>
+<path class="l lci" d="M250 223V168H1010V86" marker-end="url(#a-ci)"/>
+<path class="l lcd" d="M351 406H305V86" marker-end="url(#a-cd)"/>
+<path class="l lcd" d="M669 406H814" marker-end="url(#a-cd)"/>
+<path class="l lcd" d="M1120 298V86" marker-end="url(#a-cd)"/>
+<path class="l lmo" d="M669 546H742V634H814" marker-end="url(#a-mo)"/><text class="s halo" x="750" y="590">scrape</text><text class="s halo m" x="750" y="606">:9100</text>
+<path class="l lpr dash" d="M165 505V472" marker-end="url(#a-pr)"/><text class="s halo" x="176" y="494">jenkins-setup.yml</text>
+<path class="l lpr dash" d="M290 540H333" marker-end="url(#a-pr)"/><path class="l lpr dash" d="M312 540V714H975V687" marker-end="url(#a-pr)"/><text class="s halo" x="500" y="707">k8s-setup.yml · both VMs</text>
+<g><circle cx="400" cy="52" r="11" class="fci"/><text class="on" x="400" y="56" text-anchor="middle">1</text><rect x="413" y="42" width="78" height="20" fill="var(--s-bg,#F7F8FA)"/><text class="b halo" x="418" y="57">git push</text>
+<circle cx="100" cy="112" r="11" class="fci"/><text class="on" x="100" y="116" text-anchor="middle">2</text><text class="b halo" x="84" y="117" text-anchor="end">webhook</text>
+<circle cx="190" cy="112" r="11" class="fci"/><text class="on" x="190" y="116" text-anchor="middle">4</text><text class="b halo" x="206" y="117">[ci skip]</text>
+<circle cx="560" cy="168" r="11" class="fci"/><text class="on" x="560" y="172" text-anchor="middle">3</text><rect x="573" y="158" width="222" height="20" fill="var(--s-srv,#EDF0F4)"/><text class="b halo" x="578" y="173">build · scan · push image</text>
+<circle cx="305" cy="112" r="11" class="fcd"/><text class="on" x="305" y="116" text-anchor="middle">5</text><text class="b halo" x="321" y="117">watch</text>
+<circle cx="742" cy="406" r="11" class="fcd"/><text class="on" x="742" y="410" text-anchor="middle">6</text><text class="b halo" x="742" y="386" text-anchor="middle">rollout</text>
+<circle cx="1120" cy="112" r="11" class="fcd"/><text class="on" x="1120" y="116" text-anchor="middle">7</text><text class="b halo" x="1104" y="117" text-anchor="end">pull image</text></g>
+<!-- legend -->
+<g transform="translate(20 785)"><rect class="ci" width="18" height="14" rx="3"/><text x="26" y="12">CI (1-4)</text>
+<rect class="cd" x="130" width="18" height="14" rx="3"/><text x="156" y="12">CD (5-7)</text>
+<rect class="mo" x="260" width="18" height="14" rx="3"/><text x="286" y="12">Monitoring</text>
+<rect class="pr" x="400" width="18" height="14" rx="3"/><text x="426" y="12">Provisioning (Ansible)</text>
+<text class="s" y="42">1 push to GitHub · 2 webhook starts Jenkins · 3 build, Trivy scan, push image · 4 Jenkins commits new tag with [ci skip]</text>
+<text class="s" y="62">5 Argo CD watches the repo · 6 rolls out to shopapp · 7 pods pull the image · Nothing is exposed to the internet</text></g>
+</svg>

@@ -1,0 +1,7 @@
+node_modules/
+*.tar
+kubeconfig
+*.retry
+.env
+secret.yaml
+trivy-report.html

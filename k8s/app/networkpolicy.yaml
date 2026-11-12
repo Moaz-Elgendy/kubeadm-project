@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: shopapp-db-allow-app
+  namespace: shopapp
+  labels:
+    app.kubernetes.io/name: shopapp-db
+spec:
+  podSelector:
+    matchLabels:
+      app: shopapp-db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: shopapp
+      ports:
+        - protocol: TCP
+          port: 3306

@@ -1,0 +1,13 @@
+---
+- name: Set up the CI host (Jenkins, Docker, Trivy)
+  hosts: jenkins
+  become: true
+  vars:
+    apt_upgrade_reboot: false
+    docker_users: [jenkins]
+    docker_restart_services: [jenkins]
+  roles:
+    - apt-upgrade
+    - jenkins
+    - docker
+    - trivy

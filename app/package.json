@@ -1,0 +1,14 @@
+{
+  "name": "shopapp",
+  "version": "1.0.0",
+  "description": "Small storefront: Express + MySQL",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=22" },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.11.5"
+  }
+}

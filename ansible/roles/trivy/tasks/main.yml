@@ -1,0 +1,46 @@
+---
+- name: Install apt prerequisites
+  ansible.builtin.apt:
+    name: [ca-certificates, curl, gpg]
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create the apt keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add the Trivy apt signing key
+  ansible.builtin.get_url:
+    url: https://aquasecurity.github.io/trivy-repo/deb/public.key
+    dest: /etc/apt/keyrings/trivy.asc
+    mode: "0644"
+
+- name: Add the Trivy apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/trivy.asc] https://aquasecurity.github.io/trivy-repo/deb generic main"
+    filename: trivy
+    update_cache: true
+
+# The package ships the report templates under /usr/local/share/trivy/templates
+# (html.tpl is what the Jenkins pipeline passes with --template @...). Check the path after upgrades.
+- name: Install Trivy
+  ansible.builtin.apt:
+    name: trivy
+
+- name: Check for the jenkins user
+  ansible.builtin.getent:
+    database: passwd
+    key: jenkins
+  failed_when: false
+  register: trivy_jenkins_user
+
+- name: Create the Trivy cache directory
+  ansible.builtin.file:
+    path: "{{ trivy_cache_dir }}"
+    state: directory
+    owner: jenkins
+    group: jenkins
+    mode: "0755"
+  when: trivy_jenkins_user.ansible_facts.getent_passwd.jenkins is defined

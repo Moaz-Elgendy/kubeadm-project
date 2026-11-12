@@ -1,0 +1,37 @@
+---
+- name: Install Java and apt prerequisites
+  ansible.builtin.apt:
+    name: [fontconfig, "{{ jenkins_java_package }}", ca-certificates, curl]
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Add the Jenkins apt signing key
+  ansible.builtin.get_url:
+    url: "{{ jenkins_key_url }}"
+    dest: /etc/apt/keyrings/jenkins.asc
+    mode: "0644"
+
+- name: Add the Jenkins LTS apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/jenkins.asc] https://pkg.jenkins.io/debian-stable binary/"
+    filename: jenkins
+    update_cache: true
+
+- name: Install Jenkins
+  ansible.builtin.apt:
+    name: jenkins
+
+- name: Enable and start Jenkins
+  ansible.builtin.service:
+    name: jenkins
+    state: started
+    enabled: true
+
+- name: Wait for Jenkins to listen
+  ansible.builtin.wait_for:
+    port: "{{ jenkins_port }}"
+    timeout: 180
+
+- name: Show where the initial admin password is
+  ansible.builtin.debug:
+    msg: "Initial admin password: sudo cat /var/lib/jenkins/secrets/initialAdminPassword (UI on port {{ jenkins_port }})"

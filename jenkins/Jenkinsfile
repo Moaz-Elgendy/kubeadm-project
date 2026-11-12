@@ -1,0 +1,80 @@
+// CI pipeline. The shared library is configured in Jenkins as a Global Pipeline Library
+// named `shared-lib`, pointing at this repo with Library Path `jenkins/`
+// (steps live in jenkins/vars/).
+@Library('shared-lib') _
+
+pipeline {
+    agent { label 'built-in' }
+
+    options {
+        skipDefaultCheckout(true)
+    }
+
+    triggers {
+        githubPush()
+    }
+
+    environment {
+        IMAGE_NAME = 'mk0230/shopapp'
+        DOCKER_HUB_CREDENTIALS = 'docker-hub'
+        DOCKERFILE_CONTEXT = './app'
+        MANIFEST_FILE = './k8s/app/deployment.yaml'
+        GITHUB_CREDENTIALS = 'github'
+        GIT_REPO_URL = 'github.com/Moaz-Elgendy/kubeadm-project.git'
+        GIT_BRANCH = 'main'
+        NAMESPACE = 'shopapp'
+    }
+
+    stages {
+        stage('Checkout') {
+            when {
+                // Skip the build triggered by Jenkins' own manifest commit (prevents a loop)
+                not { changelog '.*\\[ci skip\\].*' }
+            }
+            steps {
+                deleteDir()
+                checkout scm
+            }
+        }
+
+        stage('BuildImage') {
+            when {
+                not { changelog '.*\\[ci skip\\].*' }
+            }
+            steps {
+                script {
+                    buildApp(env.IMAGE_NAME, env.DOCKER_HUB_CREDENTIALS, env.DOCKERFILE_CONTEXT)
+                }
+            }
+        }
+
+        stage('UpdateManifestInGit') {
+            when {
+                not { changelog '.*\\[ci skip\\].*' }
+            }
+            steps {
+                script {
+                    pushGithub(env.IMAGE_NAME, env.MANIFEST_FILE, env.GITHUB_CREDENTIALS, env.GIT_REPO_URL, env.GIT_BRANCH)
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "______________________________________________________________________________"
+            echo "Result:  ${currentBuild.currentResult}"
+            echo "Job:     ${env.JOB_NAME} Build Number: ${env.BUILD_NUMBER}"
+            echo "Image:   ${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
+            echo "Console: ${env.BUILD_URL}console"
+        }
+        success {
+            echo "Pushed ${env.IMAGE_NAME}:${env.BUILD_NUMBER} to Git; Argo CD will sync ${env.NAMESPACE}"
+        }
+        failure {
+            echo "Pipeline failed at stage: ${env.STAGE_NAME}"
+            echo "Debug: git log -1 --stat origin/${env.GIT_BRANCH}"
+            echo "Debug: kubectl get application shopapp -n argocd"
+        }
+    }
+}

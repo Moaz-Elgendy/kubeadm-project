@@ -1,0 +1,4 @@
+---
+kubectl_version: v1.35.9
+kubectl_arch: amd64
+kubectl_user: "{{ ansible_user | default(ansible_user_id) }}"

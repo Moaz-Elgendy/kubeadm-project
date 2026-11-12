@@ -1,0 +1,46 @@
+---
+- name: Upgrade packages on all cluster nodes
+  hosts: k8s_cluster
+  become: true
+  roles:
+    - apt-upgrade
+
+- name: Create the control plane
+  hosts: control_plane
+  become: true
+  roles:
+    - k8s-cluster-creation
+    - kubectl
+
+- name: Join the workers
+  hosts: workers
+  become: true
+  roles:
+    - k8s-cluster-join
+
+- name: Label, taint and verify
+  hosts: control_plane
+  become: true
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  tasks:
+    - name: Label the worker nodes
+      ansible.builtin.command: "kubectl label node {{ item }} {{ shopapp_node_label }} --overwrite"
+      loop: "{{ groups['workers'] }}"
+      changed_when: "'not labeled' not in label_out.stdout"
+      register: label_out
+
+    - name: Taint the worker nodes
+      ansible.builtin.command: "kubectl taint node {{ item }} {{ shopapp_node_taint }} --overwrite"
+      loop: "{{ groups['workers'] }}"
+      changed_when: "'modified' in taint_out.stdout or 'tainted' in taint_out.stdout"
+      register: taint_out
+
+    - name: Get nodes
+      ansible.builtin.command: kubectl get nodes -o wide
+      changed_when: false
+      register: nodes_out
+
+    - name: Show nodes
+      ansible.builtin.debug:
+        msg: "{{ nodes_out.stdout_lines }}"

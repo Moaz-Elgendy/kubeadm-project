@@ -1,0 +1,13 @@
+---
+k8s_minor_version: "v1.35"
+kubectl_version: "v1.35.9"
+k8s_cri_socket: "unix:///run/containerd/containerd.sock"
+k8s_pod_cidr: "10.244.0.0/16"
+flannel_manifest_url: "https://github.com/flannel-io/flannel/releases/download/v0.28.10/kube-flannel.yml"
+
+# Workload node: label + taint applied by k8s-setup.yml
+shopapp_node_label: "project=shopapp"
+shopapp_node_taint: "workload=shopapp:NoSchedule"
+
+# Local PV directory used by the MySQL StatefulSet
+mysql_pv_dir: "/mnt/mysql-data"
