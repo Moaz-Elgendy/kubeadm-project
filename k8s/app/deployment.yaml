@@ -39,7 +39,7 @@ spec:
             - until nc -z "$DB_HOST" 3306; do echo "waiting for $DB_HOST:3306"; sleep 3; done
       containers:
         - name: shopapp
-          image: mk0230/shopapp:1
+          image: mk0230/shopapp:7
           ports:
             - containerPort: 3000
           envFrom:
