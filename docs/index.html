@@ -61,7 +61,7 @@ figure{margin:0}figcaption{font-size:14px;color:var(--faint);margin-top:8px}
 .card ol{margin:0;padding-left:20px;font-size:15.5px;color:var(--mute)}.card li{padding:1px 0}
 .k8s{display:grid;grid-template-columns:1fr 1fr;gap:0 40px;list-style:none;padding:0;margin:26px 0 0}
 .k8s li{border-top:1px solid var(--line);padding:9px 0;font-size:15.5px;color:var(--mute)}.k8s b{color:var(--ink);font-weight:600}
-.feat{margin-bottom:24px}
+.feat{margin-bottom:24px}video{width:100%;height:auto;display:block;border-radius:var(--r);border:1px solid var(--line);background:#0d1117}
 .shots{display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start}.shots figure:last-child img{max-width:300px}
 .probs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .prob{border:1px solid var(--line);border-radius:8px;padding:16px 18px}.prob h3{margin-bottom:10px}
@@ -87,7 +87,7 @@ dialog{border:0;padding:0;background:none;max-width:96vw;max-height:94vh}dialog:
 <p class="lede">A kubeadm Kubernetes cluster, provisioned with Ansible, delivered by Jenkins and Argo CD, and watched by Prometheus and Grafana. Push to Git, and a new version is live minutes later.</p>
 <ul class="badges" aria-label="Technologies"><li>Kubernetes</li><li>kubeadm</li><li>Ansible</li><li>Jenkins</li><li>Argo CD</li><li>Docker</li><li>Trivy</li><li>Prometheus</li><li>Grafana</li><li>KVM</li><li>Flannel</li></ul>
 <div class="cta"><a class="btn pri" href="https://github.com/Moaz-Elgendy/kubeadm-project">View on GitHub</a><a class="btn" href="#architecture">See the architecture</a></div>
-<dl class="stats"><div><dt>v1.35.9</dt><dd>Kubernetes via kubeadm</dd></div><div><dt>2</dt><dd>KVM VMs on one server</dd></div><div><dt>0</dt><dd>manual kubectl applies per release</dd></div><div><dt>~1.5 min</dt><dd>commit to image</dd></div></dl>
+<dl class="stats"><div><dt>v1.35.9</dt><dd>Kubernetes via kubeadm</dd></div><div><dt>2</dt><dd>KVM VMs on one server</dd></div><div><dt>0</dt><dd>manual kubectl applies per release</dd></div><div><dt>1.5-3 min</dt><dd>commit to image</dd></div></dl>
 </div>
 
 <section id="architecture"><div class="wrap">
@@ -188,7 +188,12 @@ text{fill:var(--s-ink,#12161C);font-size:13px}.b{font-weight:600;font-size:15px}
 <h2>Pipeline</h2>
 <p class="sub">Jenkins does CI, Argo CD does CD. A <code>[ci skip]</code> commit message and a changelog check stop the pipeline from triggering itself.</p>
 <ol class="flow"><li><b>git push</b>to main</li><li><b>Jenkins</b>build and Trivy scan</li><li><b>Push image</b>mk0230/shopapp:build number</li><li><b>Commit tag</b>manifest, <code>[ci skip]</code></li><li><b>Argo CD sync</b>auto-sync, self-heal</li></ol>
+<figure class="feat"><video controls preload="metadata" poster="assets/ci-cd-demo-poster.png" aria-label="Screen recording: a commit is pushed, Jenkins builds, scans and pushes the image, and Argo CD rolls the change out"><source src="assets/ci-cd-demo.mp4" type="video/mp4"></video><figcaption>Live run, 42 seconds: push, Jenkins CI (build time-lapsed), Argo CD rollout, change live in the storefront.</figcaption></figure>
 <div class="grid2">
+<figure><img class="zoom" src="assets/jenkins-ci-run.png" alt="Jenkins stage view: build 7 passed Checkout, BuildImage and UpdateManifestInGit, with the Trivy report archived" loading="lazy"><figcaption>Jenkins: build 7 green, Trivy report archived.</figcaption></figure>
+<figure><img class="zoom" src="assets/argocd-shopapp.png" alt="Argo CD shopapp application: Healthy, Synced to main, last sync by Jenkins CI, resource tree with two app pods and the MySQL StatefulSet" loading="lazy"><figcaption>Argo CD: Healthy and Synced to the commit Jenkins pushed.</figcaption></figure>
+</div>
+<div class="grid2" style="margin-top:24px">
 <figure><img class="zoom" src="assets/jenkins-pipeline.png" alt="Jenkins stage view: build 12 failed at UpdateManifestInGit, build 13 passed every stage" loading="lazy"><figcaption>Build 12 failed at the manifest commit, build 13 is green.</figcaption></figure>
 <figure><img class="zoom" src="assets/jenkins-ci-skip.png" alt="Jenkins stage view: build 14, triggered by a ci skip commit, ran only Checkout; build 15 ran every stage" loading="lazy"><figcaption>Build 14 was the <code>[ci skip]</code> commit: only Checkout ran.</figcaption></figure>
 </div>
@@ -217,6 +222,7 @@ text{fill:var(--s-ink,#12161C);font-size:13px}.b{font-weight:600;font-size:15px}
 <section id="app"><div class="wrap">
 <h2>Application</h2>
 <p class="sub">shopapp: a small storefront (Node.js 22, Express, MySQL 8.4) deployed only through Git.</p>
+<figure class="feat"><img class="zoom" src="assets/app-before-after.png" alt="shopapp storefront before the commit and after Argo CD rolled it out: the headline gains the line Updated for testing" loading="lazy"><figcaption>Same URL, before and after one commit: no manual deploy step.</figcaption></figure>
 <div class="shots">
 <figure><img class="zoom" src="assets/app-storefront.png" alt="shopapp storefront on desktop" loading="lazy"></figure>
 <figure><img class="zoom" src="assets/app-storefront-mobile.png" alt="shopapp storefront on a phone" loading="lazy"></figure>

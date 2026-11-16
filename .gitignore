@@ -5,3 +5,6 @@ kubeconfig
 .env
 secret.yaml
 trivy-report.html
+
+# raw screen recordings (too large for git)
+Screen Recording*.mp4
